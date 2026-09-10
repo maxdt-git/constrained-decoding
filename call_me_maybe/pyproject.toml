@@ -21,3 +21,7 @@ dev = [
 
 [tool.uv]
 package = false
+
+[tool.mypy]
+exclude = ["^llm_sdk/"]
+namespace_packages = false

@@ -38,6 +38,6 @@ def load_prompt(path: Path) -> list[PromptItem]:
     raw = load_json(path)
     try:
         return TypeAdapter(list[PromptItem]).validate_python(raw)
-    
+
     except ValidationError as e:
         raise ValueError(f"Schema error in {path}: {e}") from e

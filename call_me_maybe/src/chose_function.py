@@ -20,16 +20,15 @@ def valid_token_id(
     return valid
 
 
-def chose_function_name(
+def generate_from_candidate(
         model: Small_LLM_Model,
         vocab: dict[int, str],
-        prompt: str,
-        function_names: list[str],
+        input_ids: list[int],
+        candidates: list[str],
 ) -> str:
 
-    input_ids = model.encode(prompt).tolist()[0]
     generated_text = ""
-    candidates = list(function_names)
+    candidates = list(candidates)
 
     # generate one token at a time, staying inside the candidate names
     while True:
@@ -53,10 +52,34 @@ def chose_function_name(
     return generated_text
 
 
+def generate_bool_value(
+        model: Small_LLM_Model,
+        vocab: dict[int, str],
+        input_ids: list[int],
+) -> bool:
+
+    text = generate_from_candidate(model, vocab, input_ids, ["true", "false"])
+    return text == "true"
+
+
+def chose_function_name(
+        model: Small_LLM_Model,
+        vocab: dict[int, str],
+        prompt: str,
+        function_names: list[str],
+) -> str:
+
+    input_ids = model.encode(prompt).tolist()[0]
+    return generate_from_candidate(model, vocab, input_ids, function_names)
+
+
 # if __name__ == "__main__":
 #     model = Small_LLM_Model()
 #     vocab_path = model.get_path_to_vocab_file()
 #     vocab = load_vocab(Path(vocab_path))
-#     valid = valid_token_id(vocab, generated_text="", candidates=["fn_add_numbers", "fn_greet"])
-#     chosen = chose_function_name(model, vocab, "What is the sum of 2 and 3?", ["fn_add_numbers", "fn_greet", "fn_reverse_string"])
+#     valid = valid_token_id(
+# vocab, generated_text="", candidates=["fn_add_numbers", "fn_greet"])
+#     chosen = chose_function_name(
+# model, vocab, "What is the sum of 2 and 3?",
+# ["fn_add_numbers", "fn_greet", "fn_reverse_string"])
 #     print(chosen)
