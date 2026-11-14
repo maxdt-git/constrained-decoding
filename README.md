@@ -4,8 +4,6 @@
 
 Function calling with a small local LLM, made reliable through **constrained decoding**: instead of hoping the model outputs valid JSON, every generated token is filtered so the output can only be a valid function name or a well-typed argument.
 
-> 🚧 Work in progress: the decoding core is implemented, the end-to-end pipeline (argument extraction and result writing) is being wired up.
-
 ## How it works
 
 1. **Vocabulary decoding** (`src/vocab.py`): loads the tokenizer's `vocab.json` and reverses the byte-level BPE mapping, so each token id maps to the exact text it produces.
