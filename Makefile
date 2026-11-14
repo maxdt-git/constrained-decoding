@@ -1,4 +1,4 @@
-VENV := /goinfre/$(USER)/call_me_maybe/.venv
+VENV ?= .venv
 UV_ENV := UV_PROJECT_ENVIRONMENT=$(VENV)
 
 install:
