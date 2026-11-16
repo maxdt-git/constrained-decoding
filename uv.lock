@@ -105,7 +105,7 @@ wheels = [
 ]
 
 [[package]]
-name = "constrained-decoding"
+name = "call-me-maybe"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

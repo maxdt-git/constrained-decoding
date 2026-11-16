@@ -1,4 +1,5 @@
 from llm_sdk import Small_LLM_Model
+from src.models import FunctionDefinition
 # from src.vocab import load_vocab
 # from pathlib import Path
 
@@ -8,6 +9,9 @@ def valid_token_id(
         generated_text: str,
         candidates: list[str],
 ) -> set[int]:
+    """
+    Create a set of valid token
+    """
 
     # keep only tokens that still lead to at least one candidate name
     valid: set[int] = set()
@@ -26,6 +30,9 @@ def generate_from_candidate(
         input_ids: list[int],
         candidates: list[str],
 ) -> str:
+    """
+    Generate text token by token, constrained to match one of the candidates.
+    """
 
     generated_text = ""
     candidates = list(candidates)
@@ -52,25 +59,41 @@ def generate_from_candidate(
     return generated_text
 
 
-def generate_bool_value(
-        model: Small_LLM_Model,
-        vocab: dict[int, str],
-        input_ids: list[int],
-) -> bool:
-
-    text = generate_from_candidate(model, vocab, input_ids, ["true", "false"])
-    return text == "true"
-
-
 def chose_function_name(
         model: Small_LLM_Model,
         vocab: dict[int, str],
         prompt: str,
-        function_names: list[str],
-) -> str:
+        functions: list[FunctionDefinition],
+) -> tuple[str, list[int]]:
+    """
+    Chose function name for the given prompt using constrained decoding
+    """
 
-    input_ids = model.encode(prompt).tolist()[0]
-    return generate_from_candidate(model, vocab, input_ids, function_names)
+    full_prompt = build_function_selection_prompt(prompt, functions)
+    input_ids: list[int] = model.encode(full_prompt).tolist()[0]
+    function_names = [function.name for function in functions]
+    name = generate_from_candidate(model, vocab, input_ids, function_names)
+    return name, input_ids
+
+
+def build_function_selection_prompt(
+        prompt: str,
+        functions: list[FunctionDefinition]
+) -> str:
+    """
+    Build a prompt listing the available functions for the model
+    """
+
+    result: list[str] = []
+    for function in functions:
+        result.append(f"- {function.name}: {function.description}")
+    descriptions = "\n".join(result)
+
+    return ("You are a function-calling assistant. Choose the single function "
+            "that best answers the user request.\n\n"
+            f"Available functions:\n {descriptions}\n\n"
+            f"User request: {prompt}\n"
+            "Function to call: ")
 
 
 # if __name__ == "__main__":

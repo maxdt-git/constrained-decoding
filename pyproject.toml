@@ -1,5 +1,5 @@
 [project]
-name = "constrained-decoding"
+name = "call_me_maybe"
 version = "0.1.0"
 description = "Function calling with constrained decoding"
 requires-python = ">=3.10"

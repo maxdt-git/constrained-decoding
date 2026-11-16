@@ -3,6 +3,10 @@ import argparse
 from pathlib import Path
 from src.loader import load_function_definition, load_prompt
 from src.models import FunctionResult
+from src.chose_function import chose_function_name
+from llm_sdk import Small_LLM_Model
+from src.vocab import load_vocab
+from src.parameters import generate_parameter_value
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,6 +34,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """
+    Run the pipeline: load inputs, generate calls, write output.
+    """
     args = parse_args()
     try:
         functions = load_function_definition(args.functions_definition)
@@ -38,11 +45,28 @@ def main() -> int:
         print(f"Error : {e}")
         return 1
 
+    model = Small_LLM_Model(device="cpu")
+    vocab = load_vocab(Path(model.get_path_to_vocab_file()))
+
     results: list[FunctionResult] = []
 
     for item in prompts:
+        print(f"Processing: {item.prompt}")
+        parameters = {}
+        name = ""
+        try:
+            name, _ = chose_function_name(model, vocab, item.prompt, functions)
+            function = next(f for f in functions if f.name == name)
+            for param_name, param_spec in function.parameters.items():
+                parameters[param_name] = generate_parameter_value(
+                    model, vocab, item.prompt, function,
+                    param_name, param_spec.type)
+        except (RuntimeError, ValueError) as e:
+            print(f"Error on {item.prompt}: {e}")
+
         results.append(
-            FunctionResult(prompt=item.prompt, name="", parameters={}))
+            FunctionResult(
+                prompt=item.prompt, name=name, parameters=parameters))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w") as f:
